@@ -91,7 +91,7 @@ def plot_network_on_world_map(df):
     fig.show()
 
 
-def filter_quantiles(df, quantile):
+def filter_quantiles_top(df, quantile):
     selected = []
     for partner in df['partnerISO'].unique():
         all_trade_links_of_partner = df[df['partnerISO'] == partner]
@@ -103,3 +103,21 @@ def filter_quantiles(df, quantile):
     selected = pd.concat(selected, axis=ROWS)
 
     return selected
+
+
+def filter_quantiles_bottom(df, quantile):
+    selected = []
+    for partner in df['partnerISO'].unique():
+        all_trade_links_of_partner = df[df['partnerISO'] == partner]
+        cut_off = percentile(
+            all_trade_links_of_partner['fobvalue'], quantile)
+        selected.append(
+            all_trade_links_of_partner[all_trade_links_of_partner['fobvalue'] <= cut_off])
+
+    selected = pd.concat(selected, axis=ROWS)
+
+    return selected
+
+
+def filter_quantiles_keep_both(df, quantile):
+    return pd.concat([filter_quantiles_top(df, quantile), filter_quantiles_bottom(df, quantile)], axis=ROWS).drop_duplicates(subset=['reporterISO', 'partnerISO'], ignore_index=True)
