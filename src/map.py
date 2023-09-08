@@ -38,8 +38,8 @@ def get_unique_countries(series):
 def plot_network_on_world_map(df):
     fig = go.Figure()
 
-    unique_countries = set(get_unique_countries(
-        df['reporterISO'])) + set(get_unique_countries(df['partnerISO']))
+    unique_countries = get_unique_countries(
+        df['reporterISO'])  # + set(get_unique_countries(df['partnerISO']))
     unique_countries = unique_countries.set_index('ISO')
     fig.add_trace(go.Scattergeo(
                   # locationmode = 'USA-states',
