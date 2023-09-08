@@ -1,0 +1,7 @@
+# country_converter==1.0.0
+geopy==2.4.0
+pandas==2.1.0
+perscache==0.6.1
+plotly==5.16.1
+pyarrow==13.0.0
+tqdm==4.66.1
