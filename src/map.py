@@ -31,17 +31,19 @@ def get_location(location):
     return location
 
 
-def get_unique_countries(series):
-    uniques = pd.DataFrame({'ISO': series.unique()})
+def get_unique_countries(df):
+
+    uniques = df.groupby('reporterISO')[['fobvalue']].sum()
+    uniques['ISO'] = uniques.index
     uniques_with_lat_long = uniques.apply(get_location, axis=COLUMNS)
     return uniques_with_lat_long
 
 
-unique_countries = get_unique_countries(df['reporterISO'])
+unique_countries = get_unique_countries(df)
 unique_countries = unique_countries.set_index('ISO', drop=False)
 
 
-def plot_network_on_world_map(df):
+def plot_network_on_world_map(df, node_scaling=lambda x: 2):
     fig = go.Figure()
 
     fig.add_trace(go.Scattergeo(
@@ -51,7 +53,7 @@ def plot_network_on_world_map(df):
                   hoverinfo='location',
                   mode='markers',
                   marker=dict(
-                      size=2,
+                      size=node_scaling(unique_countries['fobvalue']),
                       color='rgb(0, 0, 255)',
                       line=dict(
                           width=3,
