@@ -43,7 +43,7 @@ unique_countries = get_unique_countries(df)
 unique_countries = unique_countries.set_index('ISO', drop=False)
 
 
-def plot_network_on_world_map(df, node_scaling=lambda x: 2):
+def plot_network_on_world_map(df, node_scaling=lambda x: 2, scope='world'):
     fig = go.Figure()
 
     fig.add_trace(go.Scattergeo(
@@ -86,6 +86,7 @@ def plot_network_on_world_map(df, node_scaling=lambda x: 2):
             showland=True,
             landcolor='rgb(243, 243, 243)',
             countrycolor='rgb(204, 204, 204)',
+            scope=scope,
         ),
     )
 
