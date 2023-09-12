@@ -38,19 +38,17 @@ def get_unique_countries(series):
 
 
 unique_countries = get_unique_countries(df['reporterISO'])
-unique_countries = unique_countries.set_index('ISO')
+unique_countries = unique_countries.set_index('ISO', drop=False)
 
 
 def plot_network_on_world_map(df):
     fig = go.Figure()
 
     fig.add_trace(go.Scattergeo(
-                  # locationmode = 'USA-states',
+                  locations=unique_countries['ISO'],
                   lon=unique_countries['long'],
                   lat=unique_countries['lat'],
-                  hoverinfo='text',
-                  hovertext=unique_countries.index,
-                  text=unique_countries.index,
+                  hoverinfo='location',
                   mode='markers',
                   marker=dict(
                       size=2,
@@ -60,18 +58,20 @@ def plot_network_on_world_map(df):
                           color='rgba(68, 68, 68, 0)'))))
 
     for i in progress_bar(range(len(df))):
-        reporter_lat, reporter_long = unique_countries.loc[df['reporterISO'].iloc[i]]
-        partner_lat, partner_long = unique_countries.loc[df['partnerISO'].iloc[i]]
+        reporter_lat, reporter_long = unique_countries.loc[
+            df['reporterISO'].iloc[i], ['lat', 'long']]
+        partner_lat, partner_long = unique_countries.loc[
+            df['partnerISO'].iloc[i], ['lat', 'long']]
 
         fig.add_trace(
             go.Scattergeo(
-                # locationmode = 'world',
                 lon=[reporter_long, partner_long],
                 lat=[reporter_lat, partner_lat],
                 mode='lines',
                 line=dict(width=1, color='red'),
-                opacity=float(df['fobvalue'].iloc[i]) / \
-                float(df['fobvalue'].max()),
+                opacity=(float(df['fobvalue'].iloc[i])
+                         / float(df['fobvalue'].max())),
+                hoverinfo='skip'
             )
         )
 
@@ -86,9 +86,6 @@ def plot_network_on_world_map(df):
             countrycolor='rgb(204, 204, 204)',
         ),
     )
-    fig.update_traces(go.Scattergeo(
-        customdata=unique_countries.index,
-        hovertemplate="%{customdata}"))
 
     fig.show()
 
