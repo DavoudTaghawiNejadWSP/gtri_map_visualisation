@@ -5,6 +5,7 @@ from geopy.geocoders import Nominatim
 from tqdm import tqdm as progress_bar
 from perscache import Cache
 from numpy import percentile
+import pycountry
 
 
 ROWS, COLUMNS = 0, 1
@@ -19,7 +20,8 @@ df = pd.read_feather('./data/total_trade_between_countries.feather')
 
 @cache
 def get_location(location):
-    locationlatlong = geolocator.geocode(location['ISO'])
+    country = pycountry.countries.get(alpha_3=location['ISO'])
+    locationlatlong = geolocator.geocode(country.name)
     if locationlatlong is None:
         location['lat'] = None
         location['long'] = None
@@ -123,5 +125,3 @@ def filter_quantiles_keep_both(df, quantile):
     return pd.concat([filter_quantiles_reporter(df, quantile),
                       filter_quantiles_partner(df, quantile)], axis=ROWS).drop_duplicates(
                           subset=['reporterISO', 'partnerISO'], ignore_index=True)
-
-
