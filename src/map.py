@@ -59,7 +59,9 @@ def plot_network_on_world_map(df,
                               title_text=None,
                               value='fobvalue',
                               reporterISO='reporterISO',
-                              partnerISO='partnerISO'):
+                              partnerISO='partnerISO',
+                              width=None,
+                              height=None):
     """ This function plots a network on the world map. The network
     is a dataframe with three columns: ["reporterISO", "partnerISO", "fobvalue"]
 
@@ -88,6 +90,10 @@ def plot_network_on_world_map(df,
             obvious
         value, reporterISO, partnerISO:
             alternative column names
+        width:
+            width of the whole 'paper'
+        height:
+            height of the whole 'paper'
 
     """
 
@@ -103,11 +109,19 @@ def plot_network_on_world_map(df,
         lonaxis_range = [center['lon'] - lonaxis_range,
                          center['lon'] + lonaxis_range]
 
+    if width is not None or height is not None:
+        autosize = False
+    else:
+        autosize = None
+
     fig = go.Figure()
 
     fig.update_layout(
         title_text=title_text,
         showlegend=False,
+        autosize=autosize,
+        width=width,
+        height=height,
         geo=dict(
             showland=True,
             landcolor=landcolor,
