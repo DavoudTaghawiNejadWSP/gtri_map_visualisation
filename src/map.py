@@ -188,4 +188,4 @@ def filter_quantiles_keep_both(df, quantile, value='fobvalue', reporterISO='repo
 
 def filter_single_country(df, countryISO, reporterISO='reporterISO', partnerISO='partnerISO'):
     """ Filters out only traderoutes that start or end with countryISO """
-    return df[(df[reporterISO] == countryISO) | (df[reporterISO] == countryISO)]
+    return df[(df[reporterISO] == countryISO) | (df[partnerISO] == countryISO)]
