@@ -30,17 +30,17 @@ def get_location(location):
     return location
 
 
-def get_unique_countries(df, value='fobvalue', reporterISO='reporterISO'):
+def calculate_node_sums(df, values=['fobvalue'], reporterISO='reporterISO'):
     """ Calculates a dataframe with the nodesize and lat long position
     of each country
 
     Args:
-        value:
-            columnname determening node size
+        values:
+            list (!) of columnname determening node and edge sizes
         reporterISO:
             columnname with reporterISO
     """
-    uniques = df.groupby(reporterISO)[[value]].sum()
+    uniques = df.groupby(reporterISO)[values].sum()
     uniques['ISO'] = uniques.index
     uniques_with_lat_long = uniques.apply(get_location, axis=COLUMNS)
     return uniques_with_lat_long.set_index('ISO', drop=False)
@@ -70,7 +70,7 @@ def plot_network_on_world_map(df,
         df:
             dataframe with nework data ["reporterISO", "partnerISO", "fobvalue"]
         unique_countries:
-            dataframe produced by get_unique_countries
+            dataframe produced by calculate_node_sums
         node_scaling:
             function how nodes are scaled, example:
                 lambda x: x / x.median() - scales linear around the median
@@ -209,3 +209,11 @@ def filter_quantiles_keep_both(df, quantile, value='fobvalue', reporterISO='repo
 def filter_single_country(df, countryISO, reporterISO='reporterISO', partnerISO='partnerISO'):
     """ Filters out only traderoutes that start or end with countryISO """
     return df[(df[reporterISO] == countryISO) | (df[partnerISO] == countryISO)]
+
+
+def calculate_total_trade_for_all_edges(df, value='fobvalue', reporterISO='reporterISO', partnerISO='partnerISO', result_column_name='total_trade'):
+    df_reversed = df.rename({partnerISO: reporterISO, reporterISO: partnerISO})
+    df = df.set_index([reporterISO, partnerISO], drop=False)
+    df_reversed = df_reversed.set_index([reporterISO, partnerISO])
+    df[result_column_name] = (df[value] + df_reversed[value]) / 2
+    return df.reset_index(drop=True)
