@@ -61,7 +61,8 @@ def plot_network_on_world_map(df,
                               reporterISO='reporterISO',
                               partnerISO='partnerISO',
                               width=None,
-                              height=None):
+                              height=None,
+                              save=None):
     """ This function plots a network on the world map. The network
     is a dataframe with three columns: ["reporterISO", "partnerISO", "fobvalue"]
 
@@ -94,6 +95,9 @@ def plot_network_on_world_map(df,
             width of the whole 'paper'
         height:
             height of the whole 'paper'
+        save:
+            saves the figure. Parametern should be the filename ending in .png .jpeg .webp .svg .pdg .eps.
+            For emple save='./graphs/german_trade.png'
 
     """
 
@@ -165,6 +169,8 @@ def plot_network_on_world_map(df,
         )
 
     fig.show()
+    if save is not None:
+        fig.write_image(save)
 
 
 def filter_quantiles_reporter(df, quantile, value='fobvalue', reporterISO='reporterISO'):
