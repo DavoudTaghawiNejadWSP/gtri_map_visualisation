@@ -148,7 +148,7 @@ def plot_network_on_world_map(df,
                       color=countrymarkercolor,
                       line=dict(
                           width=3,
-                          color=linecolor))))
+                          color=countrymarkercolor))))
 
     for i in progress_bar(range(len(df))):
         reporter_lat, reporter_long = unique_countries.loc[
@@ -161,10 +161,10 @@ def plot_network_on_world_map(df,
                 lon=[reporter_long, partner_long],
                 lat=[reporter_lat, partner_lat],
                 mode='lines',
-                line=dict(width=linewidth, color='red'),
+                line=dict(width=linewidth, color=linecolor[i]),
                 opacity=(float(df[value].iloc[i])
                          / float(df[value].max())),
-                hoverinfo='skip'
+                hoverinfo='skip',
             )
         )
 
