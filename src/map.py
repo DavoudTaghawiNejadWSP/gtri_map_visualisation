@@ -43,8 +43,29 @@ unique_countries = get_unique_countries(df)
 unique_countries = unique_countries.set_index('ISO', drop=False)
 
 
-def plot_network_on_world_map(df, node_scaling=lambda x: 2, scope='world'):
+def plot_network_on_world_map(df, node_scaling=lambda x: 2, scope=None, center=None, lat_range=20, long_range=20):
+
+    if center is not None:
+        center = {'lat': unique_countries.loc[center, 'lat'],
+                  'lon': unique_countries.loc[center, 'long']}
+
     fig = go.Figure()
+
+    fig.update_layout(
+        title_text='TITLE',
+        showlegend=False,
+        geo=dict(
+            showland=True,
+            landcolor='rgb(243, 243, 243)',
+            countrycolor='rgb(204, 204, 204)',
+            scope=scope,
+            center=center,
+            lataxis_range=[center['lat'] - lat_range,
+                           center['lat'] + lat_range],
+            lonaxis_range=[center['lon'] - long_range,
+                           center['lon'] + long_range]
+        )
+    )
 
     fig.add_trace(go.Scattergeo(
                   locations=unique_countries['ISO'],
@@ -76,19 +97,6 @@ def plot_network_on_world_map(df, node_scaling=lambda x: 2, scope='world'):
                 hoverinfo='skip'
             )
         )
-
-    fig.update_layout(
-        title_text='TITLE',
-        showlegend=False,
-        geo=dict(
-            # scope = 'country names',
-            # projection_type = 'azimuthal equal area',
-            showland=True,
-            landcolor='rgb(243, 243, 243)',
-            countrycolor='rgb(204, 204, 204)',
-            scope=scope,
-        ),
-    )
 
     fig.show()
 
