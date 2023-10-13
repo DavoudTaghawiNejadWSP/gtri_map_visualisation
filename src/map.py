@@ -216,8 +216,9 @@ def filter_single_country(df, countryISO, reporterISO='reporterISO', partnerISO=
 
 
 def calculate_total_trade_for_all_edges(df, value='fobvalue', reporterISO='reporterISO', partnerISO='partnerISO', result_column_name='total_trade'):
-    df_reversed = df.rename({partnerISO: reporterISO, reporterISO: partnerISO})
+    """Calculate total trade for all edges, by summing exports and the reverse exports"""
+    df_reversed = df.rename(columns={partnerISO: reporterISO, reporterISO: partnerISO})
     df = df.set_index([reporterISO, partnerISO], drop=False)
     df_reversed = df_reversed.set_index([reporterISO, partnerISO])
-    df[result_column_name] = (df[value] + df_reversed[value]) / 2
+    df[result_column_name] = (df[value].add(df_reversed[value], fill_value=0))
     return df.reset_index(drop=True)
