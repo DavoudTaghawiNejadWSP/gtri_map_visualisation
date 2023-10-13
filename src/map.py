@@ -57,7 +57,8 @@ def plot_network_on_world_map(df,
                               countrymarkercolor='rgb(0, 0, 255)',
                               linewidth=1,
                               title_text=None,
-                              value='fobvalue',
+                              edge_weight='fobvalue',
+                              node_size='fobvalue',
                               reporterISO='reporterISO',
                               partnerISO='partnerISO',
                               width=None,
@@ -89,7 +90,11 @@ def plot_network_on_world_map(df,
             obvious
         title_text:
             obvious
-        value, reporterISO, partnerISO:
+        egde_weight:
+            column in the dataframe that defines the edge color-transparency
+        node_size:
+            column in unique_countries that defines the node size
+        reporterISO, partnerISO:
             alternative column names
         width:
             width of the whole 'paper'
@@ -100,7 +105,6 @@ def plot_network_on_world_map(df,
             For emple save='./graphs/german_trade.png'
 
     """
-
     if isinstance(linecolor, str):
         # if linecolor is string all lines have the same color
         linecolor = [linecolor] * len(df)
@@ -148,7 +152,7 @@ def plot_network_on_world_map(df,
                   hoverinfo='location',
                   mode='markers',
                   marker=dict(
-                      size=node_scaling(unique_countries[value]),
+                      size=node_scaling(unique_countries[node_size]),  # change this for a seperate value that is the node size
                       color=countrymarkercolor,
                       line=dict(
                           width=3,
@@ -166,8 +170,8 @@ def plot_network_on_world_map(df,
                 lat=[reporter_lat, partner_lat],
                 mode='lines',
                 line=dict(width=linewidth, color=linecolor[i]),
-                opacity=(float(df[value].iloc[i])
-                         / float(df[value].max())),
+                opacity=(float(df[edge_weight].iloc[i])
+                         / float(df[edge_weight].max())),
                 hoverinfo='skip',
             )
         )
