@@ -101,6 +101,10 @@ def plot_network_on_world_map(df,
 
     """
 
+    if isinstance(linecolor, str):
+        # if linecolor is string all lines have the same color
+        linecolor = [linecolor] * len(df)
+
     if center is not None:
         center = {'lat': unique_countries.loc[center, 'lat'],
                   'lon': unique_countries.loc[center, 'long']}
