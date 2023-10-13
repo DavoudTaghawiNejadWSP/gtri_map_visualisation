@@ -146,13 +146,13 @@ def plot_network_on_world_map(df,
     )
 
     fig.add_trace(go.Scattergeo(
-                  locations=unique_countries['ISO'],
                   lon=unique_countries['long'],
                   lat=unique_countries['lat'],
                   hoverinfo='location',
                   mode='markers',
                   marker=dict(
-                      size=node_scaling(unique_countries[node_size]),  # change this for a seperate value that is the node size
+                      # change this for a seperate value that is the node size
+                      size=node_scaling(unique_countries[node_size]),
                       color=countrymarkercolor,
                       line=dict(
                           width=3,
@@ -221,7 +221,8 @@ def filter_single_country(df, countryISO, reporterISO='reporterISO', partnerISO=
 
 def calculate_total_trade_for_all_edges(df, value='fobvalue', reporterISO='reporterISO', partnerISO='partnerISO', result_column_name='total_trade'):
     """Calculate total trade for all edges, by summing exports and the reverse exports"""
-    df_reversed = df.rename(columns={partnerISO: reporterISO, reporterISO: partnerISO})
+    df_reversed = df.rename(
+        columns={partnerISO: reporterISO, reporterISO: partnerISO})
     df = df.set_index([reporterISO, partnerISO], drop=False)
     df_reversed = df_reversed.set_index([reporterISO, partnerISO])
     df[result_column_name] = (df[value].add(df_reversed[value], fill_value=0))
