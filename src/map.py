@@ -146,8 +146,7 @@ def plot_network_on_world_map(df,
     )
 
     fig.add_trace(go.Scattergeo(
-                  lon=unique_countries['long'],
-                  lat=unique_countries['lat'],
+                  locations=unique_countries['ISO'],
                   hoverinfo='location',
                   mode='markers',
                   marker=dict(
@@ -159,15 +158,9 @@ def plot_network_on_world_map(df,
                           color=countrymarkercolor))))
 
     for i in progress_bar(range(len(df))):
-        reporter_lat, reporter_long = unique_countries.loc[
-            df[reporterISO].iloc[i], ['lat', 'long']]
-        partner_lat, partner_long = unique_countries.loc[
-            df[partnerISO].iloc[i], ['lat', 'long']]
-
         fig.add_trace(
             go.Scattergeo(
-                lon=[reporter_long, partner_long],
-                lat=[reporter_lat, partner_lat],
+                locations=unique_countries['ISO'],
                 mode='lines',
                 line=dict(width=linewidth, color=linecolor[i]),
                 opacity=(float(df[edge_weight].iloc[i])
