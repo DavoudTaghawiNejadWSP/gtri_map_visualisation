@@ -15,24 +15,11 @@ cache = Cache()
 geolocator = Nominatim(user_agent="mymap")
 
 
-@cache
-def get_location(location):
-    """ Internal function loading lat long position for an iso code or address.
-    This function is cached and uses the internet for determening the lat long"""
-    country = pycountry.countries.get(alpha_3=location['ISO'])
-    locationlatlong = geolocator.geocode(country.name)
-    if locationlatlong is None:
-        location['lat'] = None
-        location['long'] = None
-    else:
-        location['lat'] = locationlatlong.latitude
-        location['long'] = locationlatlong.longitude
-    return location
-
-
 def calculate_node_sums(df, values=['fobvalue'], reporterISO='reporterISO'):
-    """ Calculates a dataframe with the nodesize and lat long position
-    of each country
+    """ Calculates a dataframe where for each country all outgoing nodes are
+    added of each country for example if values=['exports'] all exports to all
+    trade partners are summed for each country.
+    The dataframe must have the country ISO of the node as index.
 
     Args:
         values:
@@ -42,15 +29,13 @@ def calculate_node_sums(df, values=['fobvalue'], reporterISO='reporterISO'):
     """
     uniques = df.groupby(reporterISO)[values].sum()
     uniques['ISO'] = uniques.index
-    uniques_with_lat_long = uniques.apply(get_location, axis=COLUMNS)
-    return uniques_with_lat_long.set_index('ISO', drop=False)
+    return uniques
 
 
 def plot_network_on_world_map(df,
                               unique_countries,
                               node_scaling=lambda x: 2,
                               scope=None,
-                              center=None, lataxis_range=None, lonaxis_range=None,
                               landcolor='rgb(243, 243, 243)',
                               countrycolor='rgb(204, 204, 204)',
                               linecolor='rgba(68, 68, 68, 255)',
@@ -80,10 +65,6 @@ def plot_network_on_world_map(df,
                 lambda x: 1 - every node is of size 1
         scope:
             focus on continent available values: ["world", "usa", "europe", "asia", "africa", "north america", "south america"]
-        center:
-            center on countryISO
-        lataxis_range, lonaxis_range:
-            if centered on a country, determine size of focus, try 10 or 20
         landcolor, countrycolor, linecolor, countrymarkercolor:
             color the map
         linewidth:
@@ -109,18 +90,6 @@ def plot_network_on_world_map(df,
         # if linecolor is string all lines have the same color
         linecolor = [linecolor] * len(df)
 
-    if center is not None:
-        center = {'lat': unique_countries.loc[center, 'lat'],
-                  'lon': unique_countries.loc[center, 'long']}
-
-    if (center is not None
-        and lataxis_range is not None
-            and lonaxis_range is not None):
-        lataxis_range = [center['lat'] - lataxis_range,
-                         center['lat'] + lataxis_range]
-        lonaxis_range = [center['lon'] - lonaxis_range,
-                         center['lon'] + lonaxis_range]
-
     if width is not None or height is not None:
         autosize = False
     else:
@@ -139,15 +108,11 @@ def plot_network_on_world_map(df,
             landcolor=landcolor,
             countrycolor=countrycolor,
             scope=scope,
-            center=center,
-            lataxis_range=lataxis_range,
-            lonaxis_range=lonaxis_range
         )
     )
 
     fig.add_trace(go.Scattergeo(
-                  lon=unique_countries['long'],
-                  lat=unique_countries['lat'],
+                  locations=unique_countries['ISO'],
                   hoverinfo='location',
                   mode='markers',
                   marker=dict(
@@ -159,15 +124,10 @@ def plot_network_on_world_map(df,
                           color=countrymarkercolor))))
 
     for i in progress_bar(range(len(df))):
-        reporter_lat, reporter_long = unique_countries.loc[
-            df[reporterISO].iloc[i], ['lat', 'long']]
-        partner_lat, partner_long = unique_countries.loc[
-            df[partnerISO].iloc[i], ['lat', 'long']]
 
         fig.add_trace(
             go.Scattergeo(
-                lon=[reporter_long, partner_long],
-                lat=[reporter_lat, partner_lat],
+                locations=[df[reporterISO].iloc[i], df[partnerISO].iloc[i]],
                 mode='lines',
                 line=dict(width=linewidth, color=linecolor[i]),
                 opacity=(float(df[edge_weight].iloc[i])
