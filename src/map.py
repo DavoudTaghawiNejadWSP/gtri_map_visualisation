@@ -5,6 +5,7 @@ from geopy.geocoders import Nominatim
 from tqdm import tqdm as progress_bar
 from perscache import Cache
 from numpy import percentile
+import pycountry
 
 
 ROWS, COLUMNS = 0, 1
@@ -15,8 +16,10 @@ geolocator = Nominatim(user_agent="mymap")
 
 
 def calculate_node_sums(df, values=['fobvalue'], reporterISO='reporterISO'):
-    """ Calculates a dataframe with the nodesize and lat long position
-    of each country
+    """ Calculates a dataframe where for each country all outgoing nodes are
+    added of each country for example if values=['exports'] all exports to all
+    trade partners are summed for each country.
+    The dataframe must have the country ISO of the node as index.
 
     Args:
         values:
@@ -26,14 +29,13 @@ def calculate_node_sums(df, values=['fobvalue'], reporterISO='reporterISO'):
     """
     uniques = df.groupby(reporterISO)[values].sum()
     uniques['ISO'] = uniques.index
-    return uniques.set_index('ISO', drop=False)
+    return uniques
 
 
 def plot_network_on_world_map(df,
                               unique_countries,
                               node_scaling=lambda x: 2,
                               scope=None,
-                              center=None, lataxis_range=None, lonaxis_range=None,
                               landcolor='rgb(243, 243, 243)',
                               countrycolor='rgb(204, 204, 204)',
                               linecolor='rgba(68, 68, 68, 255)',
@@ -63,10 +65,6 @@ def plot_network_on_world_map(df,
                 lambda x: 1 - every node is of size 1
         scope:
             focus on continent available values: ["world", "usa", "europe", "asia", "africa", "north america", "south america"]
-        center:
-            center on countryISO
-        lataxis_range, lonaxis_range:
-            if centered on a country, determine size of focus, try 10 or 20
         landcolor, countrycolor, linecolor, countrymarkercolor:
             color the map
         linewidth:
@@ -92,18 +90,6 @@ def plot_network_on_world_map(df,
         # if linecolor is string all lines have the same color
         linecolor = [linecolor] * len(df)
 
-    if center is not None:
-        center = {'lat': unique_countries.loc[center, 'lat'],
-                  'lon': unique_countries.loc[center, 'long']}
-
-    if (center is not None
-        and lataxis_range is not None
-            and lonaxis_range is not None):
-        lataxis_range = [center['lat'] - lataxis_range,
-                         center['lat'] + lataxis_range]
-        lonaxis_range = [center['lon'] - lonaxis_range,
-                         center['lon'] + lonaxis_range]
-
     if width is not None or height is not None:
         autosize = False
     else:
@@ -122,9 +108,6 @@ def plot_network_on_world_map(df,
             landcolor=landcolor,
             countrycolor=countrycolor,
             scope=scope,
-            center=center,
-            lataxis_range=lataxis_range,
-            lonaxis_range=lonaxis_range
         )
     )
 
@@ -141,9 +124,10 @@ def plot_network_on_world_map(df,
                           color=countrymarkercolor))))
 
     for i in progress_bar(range(len(df))):
+
         fig.add_trace(
             go.Scattergeo(
-                locations=unique_countries['ISO'],
+                locations=[df[reporterISO].iloc[i], df[partnerISO].iloc[i]],
                 mode='lines',
                 line=dict(width=linewidth, color=linecolor[i]),
                 opacity=(float(df[edge_weight].iloc[i])
