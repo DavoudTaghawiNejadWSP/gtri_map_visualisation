@@ -5,7 +5,6 @@ from geopy.geocoders import Nominatim
 from tqdm import tqdm as progress_bar
 from perscache import Cache
 from numpy import percentile
-import pycountry
 
 
 ROWS, COLUMNS = 0, 1
@@ -13,21 +12,6 @@ ROWS, COLUMNS = 0, 1
 cache = Cache()
 
 geolocator = Nominatim(user_agent="mymap")
-
-
-@cache
-def get_location(location):
-    """ Internal function loading lat long position for an iso code or address.
-    This function is cached and uses the internet for determening the lat long"""
-    country = pycountry.countries.get(alpha_3=location['ISO'])
-    locationlatlong = geolocator.geocode(country.name)
-    if locationlatlong is None:
-        location['lat'] = None
-        location['long'] = None
-    else:
-        location['lat'] = locationlatlong.latitude
-        location['long'] = locationlatlong.longitude
-    return location
 
 
 def calculate_node_sums(df, values=['fobvalue'], reporterISO='reporterISO'):
@@ -42,8 +26,7 @@ def calculate_node_sums(df, values=['fobvalue'], reporterISO='reporterISO'):
     """
     uniques = df.groupby(reporterISO)[values].sum()
     uniques['ISO'] = uniques.index
-    uniques_with_lat_long = uniques.apply(get_location, axis=COLUMNS)
-    return uniques_with_lat_long.set_index('ISO', drop=False)
+    return uniques.set_index('ISO', drop=False)
 
 
 def plot_network_on_world_map(df,
@@ -146,8 +129,7 @@ def plot_network_on_world_map(df,
     )
 
     fig.add_trace(go.Scattergeo(
-                  lon=unique_countries['long'],
-                  lat=unique_countries['lat'],
+                  locations=unique_countries['ISO'],
                   hoverinfo='location',
                   mode='markers',
                   marker=dict(
@@ -159,15 +141,9 @@ def plot_network_on_world_map(df,
                           color=countrymarkercolor))))
 
     for i in progress_bar(range(len(df))):
-        reporter_lat, reporter_long = unique_countries.loc[
-            df[reporterISO].iloc[i], ['lat', 'long']]
-        partner_lat, partner_long = unique_countries.loc[
-            df[partnerISO].iloc[i], ['lat', 'long']]
-
         fig.add_trace(
             go.Scattergeo(
-                lon=[reporter_long, partner_long],
-                lat=[reporter_lat, partner_lat],
+                locations=unique_countries['ISO'],
                 mode='lines',
                 line=dict(width=linewidth, color=linecolor[i]),
                 opacity=(float(df[edge_weight].iloc[i])
